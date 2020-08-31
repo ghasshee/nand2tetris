@@ -1,4 +1,6 @@
 
+all: ml  
+	ocamlc -o Asm support.cmo lexer.cmo parser.cmo syntax.cmo asm.cmo 
 
 parser:	
 	ocamlc -c support.ml 
@@ -12,8 +14,6 @@ lexer: parser
 ml: lexer 
 	ocamlc -c lexer.ml parser.ml syntax.ml asm.ml 
 
-all: ml  
-	ocamlc -o Asm support.cmo lexer.cmo parser.cmo syntax.cmo asm.cmo 
 
 clean: 
 	rm -rf *.mli *.cmo *.cmi Asm lexer.ml parser.ml

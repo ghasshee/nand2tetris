@@ -1,5 +1,7 @@
 
+open Arg
 open Syntax
+open Printf
 
 
 (* PARSE *) 
@@ -15,16 +17,26 @@ let file        = ref (None : string option )
 let push_file   = fun str -> match !file with 
     | Some (_)      -> raise SingleFileMustBeSpecified
     | None          -> file := Some str 
-let parseArgs() = Arg.parse [] push_file "" 
+
+let out_file    = ref "a.out" 
+let args        = [
+    ("-o", String (fun s-> out_file := s), "Output file name") ] 
+let parseArgs() = Arg.parse args push_file "" 
 
 let get_file    = fun () -> match !file with 
     | Some s        -> s 
     | None          -> raise SingleFileMustBeSpecified  ;;
 
+
+(* MAIN: FILE -> LEX -> PARSE -> ASSEMBLE *) 
 let _ = parseArgs () in 
 let file = get_file () in 
 let ch = open_in file in 
 let cmds,tbl = parse ch  in 
 let alloc = ref 16 in 
-List.fold_right (fun c cs -> asm_cmd tbl alloc c; cs) cmds ()  ;;
+let out_channel = open_out !out_file in 
+let out s       = fprintf out_channel "%s" s in 
+List.iter (fun c -> out (asm_cmd tbl alloc c)) cmds ; 
+close_out out_channel ;;
+
 

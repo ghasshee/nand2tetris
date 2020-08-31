@@ -53,11 +53,11 @@ input:
     | file                      { $1,symboltbl } 
 file: 
     | EOF                       { []                 } 
-    | line file                 { List.append $2 $1  } 
+    | line file                 { List.append $1 $2  } 
 
 line : 
     | NEWLINE                   { []    }
-    | command NEWLINE           { (* let L(l) = $2 in pi l;pn(); *) [$1]  }
+    | command NEWLINE           { [$1]  }
 
 command: 
     | comp jump                 { incr_line(); C_COMMAND([],$1,$2) } 

@@ -1,16 +1,34 @@
 %{
-open Syntax
-open Support
+    open Syntax
+    open Support
+    
+    exception ALUError
 
-exception ALUError
 
+    let symboltbl:tbl = Hashtbl.create 1024 
+    let reserved = [
+    ("SP", 0);
+    ("LCL", 1);
+    ("ARG", 2);
+    ("THIS", 3);("THAT", 4); 
+    ("R0", 0);("R1", 1);("R2", 2);("R3", 3);("R4", 4);
+    ("R5", 5);("R6", 6);("R7", 7);("R8", 8);("R9", 9);
+    ("R10",10);("R11",11);("R12",12);("R13",13);("R14",14);("R15",15);
+    ("SCREEN", 16384);
+    ("KBD", 24576)
+    ]
+    let _ = List.iter (fun (s,i)-> Hashtbl.add symboltbl s i) reserved 
+
+    let line = ref 0
+    let incr_line () = incr line 
+    let decr_line () = decr line 
 
 
 %}
 
 /* %token <arg> TOKEN */ 
 
-%token <Support.info>NEWLINE 
+%token NEWLINE 
 %token EOF 
 %token LPAREN RPAREN 
 %token EQ 
@@ -18,7 +36,7 @@ exception ALUError
 %token <int> NUM 
 %token <string> VAR
 %token A D M MD AM AD AMD 
-%token <Support.info> AT 
+%token AT 
 %token ONE ZERO 
 %token BANG
 %token COLON SEMI 
@@ -28,23 +46,25 @@ exception ALUError
 %left  PLUS
 
 %start input 
-%type <Syntax.commands> input 
+%type <Syntax.commands * Support.tbl> input 
 
 %%
 input: 
-    | EOF                       { [] } 
-    | line input                { List.append $2 $1  } 
+    | file                      { $1,symboltbl } 
+file: 
+    | EOF                       { []                 } 
+    | line file                 { List.append $2 $1  } 
 
 line : 
     | NEWLINE                   { []    }
     | command NEWLINE           { (* let L(l) = $2 in pi l;pn(); *) [$1]  }
 
 command: 
-    | comp jump                 { C_COMMAND([],$1,$2) } 
-    | dest comp                 { C_COMMAND($1,$2,NULL) } 
-    | dest comp jump            { C_COMMAND($1, $2, $3) }
-    | AT symbol                 { A_COMMAND($2) }
-    | LPAREN VAR RPAREN COLON   { L_COMMAND($2) }
+    | comp jump                 { incr_line(); C_COMMAND([],$1,$2) } 
+    | dest comp                 { incr_line(); C_COMMAND($1,$2,NULL) } 
+    | dest comp jump            { incr_line(); C_COMMAND($1, $2, $3) }
+    | AT symbol                 { incr_line(); A_COMMAND($2) }
+    | LPAREN VAR RPAREN         { add symboltbl $2 !line; L_COMMAND($2) }
 
 symbol: 
     | VAR                       { VAR($1)  } 

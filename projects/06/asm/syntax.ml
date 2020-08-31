@@ -127,11 +127,16 @@ let rec binary_of_int i = function
                             then "0" ^ binary_of_int i (n-1) 
                             else "1" ^ binary_of_int (i-pivot) (n-1) 
 
-let asm_cmd = function 
+let get_addr tbl alloc str = 
+    try Hashtbl.find tbl str 
+    with Not_found -> let i = !alloc in Hashtbl.add tbl str i; incr alloc; i ;;
+
+let asm_cmd tbl alloc = function 
     | A_COMMAND(ADDR(i))    -> print_endline ( "0" ^ binary_of_int i 15 ) 
+    | A_COMMAND(VAR(str))   -> let i = get_addr tbl alloc str  in 
+                               print_endline ( "0" ^ binary_of_int i 15 )
     | C_COMMAND(d,c,j)      -> print_endline ( "111" ^ asm_comp c ^ asm_dest d ^ asm_jump j ) 
     | L_COMMAND(_)          -> () 
-    | _     -> raise ParseErrorACommand
 
 
 

@@ -24,5 +24,7 @@ let get_file    = fun () -> match !file with
 let _ = parseArgs () in 
 let file = get_file () in 
 let ch = open_in file in 
-let cmds = parse ch  in 
-List.fold_right (fun c cs -> asm_cmd c; cs) cmds ()  ;;
+let cmds,tbl = parse ch  in 
+let alloc = ref 16 in 
+List.fold_right (fun c cs -> asm_cmd tbl alloc c; cs) cmds ()  ;;
+
